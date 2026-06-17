@@ -20,6 +20,8 @@
   "vars": {
     "AGENT_ID": "agent_01JtoEioDARZ25kBiX63ogrf",
     "ENVIRONMENT_ID": "env_01NXRkiNfXacFu7ZrDTWEVSG",
-    "ANTHROPIC_MODEL": "claude-haiku-4-5-20251001"
+    "ANTHROPIC_MODEL": "claude-haiku-4-5-20251001",
+    // Comma-separated Telegram chat IDs allowed to use the bot. Empty = open to all.
+    "ALLOWED_CHAT_IDS": "8327879704"
   }
 }

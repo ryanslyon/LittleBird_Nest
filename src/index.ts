@@ -1,4 +1,5 @@
 import { ChatSession } from "./chat-session";
+import { parseAllowedChatIds, isChatAllowed } from "./access";
 import type { TgUpdate } from "./telegram";
 
 export interface Env {
@@ -10,6 +11,8 @@ export interface Env {
   AGENT_ID: string;
   ENVIRONMENT_ID: string;
   ANTHROPIC_MODEL: string;
+  // Comma-separated Telegram chat IDs allowed to use the bot. Empty = open to all.
+  ALLOWED_CHAT_IDS: string;
   // Bindings
   CHAT_SESSION: DurableObjectNamespace;
 }
@@ -51,6 +54,13 @@ export default {
       const msg = update.message ?? update.edited_message;
       const chatId = msg?.chat?.id;
       if (chatId == null) return new Response("ok", { status: 200 });
+
+      // Allowlist gate. Unauthorized chats are silently dropped (ack 200 so
+      // Telegram doesn't retry) — no engagement, no agent spend.
+      if (!isChatAllowed(chatId, parseAllowedChatIds(env.ALLOWED_CHAT_IDS))) {
+        console.log(`blocked unauthorized chat ${chatId}`);
+        return new Response("ok", { status: 200 });
+      }
 
       // Route to the per-chat Durable Object. It acks fast and continues the
       // agent run in the background via alarms.

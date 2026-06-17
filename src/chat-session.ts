@@ -1,11 +1,14 @@
 import { ManagedAgents, type SessionEvent, isTerminalIdle } from "./anthropic";
 import { Telegram, type TgUpdate, type TgMessage } from "./telegram";
 import { pickLargestPhoto, newEvents, maxCursor } from "./cursor";
+import { checkRate } from "./access";
 import type { Env } from "./index";
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLLS = 240; // ~8 minutes ceiling per turn
 const IMAGE_MOUNT_DIR = "/mnt/inputs";
+const RATE_WINDOW_MS = 60_000; // per-chat: at most RATE_MAX messages per minute
+const RATE_MAX = 20;
 
 interface Persisted {
   sessionId?: string;
@@ -15,6 +18,8 @@ interface Persisted {
   active: boolean; // is an alarm/poll loop running for this chat
   polls: number; // polls since this turn started
   sentThisTurn: boolean;
+  rate: number[]; // recent message timestamps (ms) for rate limiting
+  rateNotified: boolean; // have we already warned during the current burst
 }
 
 const DEFAULT_STATE: Persisted = {
@@ -23,6 +28,8 @@ const DEFAULT_STATE: Persisted = {
   active: false,
   polls: 0,
   sentThisTurn: false,
+  rate: [],
+  rateNotified: false,
 };
 
 /**
@@ -66,6 +73,24 @@ export class ChatSession {
   private async handleMessage(msg: TgMessage): Promise<void> {
     const chatId = msg.chat.id;
     const text = (msg.text ?? msg.caption ?? "").trim();
+
+    // Per-chat rate limit (cheap abuse guard even for allowlisted users).
+    const pre = await this.load();
+    const rc = checkRate(pre.rate, Date.now(), RATE_WINDOW_MS, RATE_MAX);
+    pre.rate = rc.history;
+    if (!rc.allowed) {
+      const notify = !pre.rateNotified;
+      pre.rateNotified = true;
+      await this.save(pre);
+      if (notify) {
+        try {
+          await this.tg.sendMessage(chatId, "🌿 That's a lot of messages at once — give me a moment to catch up.");
+        } catch {}
+      }
+      return;
+    }
+    pre.rateNotified = false;
+    await this.save(pre);
 
     // /start and /help — quick local replies, no agent round-trip.
     if (text === "/start" || text === "/help") {
