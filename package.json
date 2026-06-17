@@ -1,0 +1,23 @@
+{
+  "name": "nature-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NatureBuddy — a nature-expert Telegram bot powered by Claude Managed Agents, running on Cloudflare Workers + Durable Objects.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "setup": "node scripts/setup.mjs",
+    "set-webhook": "node scripts/set-webhook.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:check": "wrangler deploy --dry-run --outdir dist"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250601.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.9",
+    "wrangler": "^4.101.0"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nature-bot",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-01",
+  "observability": { "enabled": true },
+
+  // One Durable Object instance per Telegram chat. It maps the chat to a
+  // persistent Managed Agent session (conversation memory) and orchestrates
+  // the agent run via DO alarms (so we can ack the Telegram webhook instantly
+  // and stream replies back as the agent works).
+  "durable_objects": {
+    "bindings": [{ "name": "CHAT_SESSION", "class_name": "ChatSession" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ChatSession"] }],
+
+  // Non-secret config. AGENT_ID / ENVIRONMENT_ID are filled in by `npm run setup`.
+  // Secrets (ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_SECRET_TOKEN) are set
+  // via `wrangler secret put` (prod) or .dev.vars (local) — never committed.
+  "vars": {
+    "AGENT_ID": "agent_01JtoEioDARZ25kBiX63ogrf",
+    "ENVIRONMENT_ID": "env_01NXRkiNfXacFu7ZrDTWEVSG",
+    "ANTHROPIC_MODEL": "claude-haiku-4-5-20251001",
+    // Comma-separated Telegram chat IDs allowed to use the bot. Empty = open to all.
+    "ALLOWED_CHAT_IDS": "8327879704,121543789"
+  }
+}
