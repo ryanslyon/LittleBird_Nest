@@ -98,6 +98,27 @@ To receive the reply on Telegram during local dev, use a real `chat.id` (message
 the bot once and read it from `https://api.telegram.org/bot<token>/getUpdates`,
 with the webhook unset) and expose `wrangler dev` over a tunnel.
 
+## Tests & CI/CD
+
+```bash
+npm test          # vitest unit tests (cursor math, message splitting, idle detection, photo pick)
+npm run typecheck # tsc --noEmit
+npm run build:check  # wrangler deploy --dry-run (offline bundle validation)
+```
+
+GitHub Actions:
+- **`.github/workflows/ci.yml`** — runs on every push/PR: typecheck → unit tests → build dry-run. No secrets needed.
+- **`.github/workflows/deploy.yml`** — runs on push to `main` (and manual dispatch): typecheck → tests → `wrangler deploy`.
+
+**Required repo secrets** (Settings → Secrets and variables → Actions) for the deploy workflow:
+
+| Secret | Value |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | A token with **Workers Scripts: Edit** (the "Edit Cloudflare Workers" template works) |
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID |
+
+The Worker's *application* secrets (`ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_SECRET_TOKEN`) are stored in Cloudflare via `wrangler secret put` and **persist across deploys**, so the deploy workflow doesn't touch them. Rotate them with `wrangler secret put` (or re-run the command locally) — not through GitHub.
+
 ## Configuration
 
 Non-secret (`wrangler.jsonc` → `vars`, set by `npm run setup`):
