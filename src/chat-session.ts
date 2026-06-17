@@ -92,6 +92,21 @@ export class ChatSession {
     pre.rateNotified = false;
     await this.save(pre);
 
+    // /new and /reset — forget the current session; the next message starts fresh.
+    if (text === "/new" || text === "/reset") {
+      const s = await this.load();
+      s.sessionId = undefined;
+      s.cursorTs = "";
+      s.recentIds = [];
+      s.active = false;
+      s.polls = 0;
+      s.sentThisTurn = false;
+      await this.save(s);
+      await this.state.storage.deleteAlarm(); // stop any in-flight poll loop
+      await this.tg.sendMessage(chatId, "🌿 Fresh start — I've cleared our conversation. What would you like to explore?");
+      return;
+    }
+
     // /start and /help — quick local replies, no agent round-trip.
     if (text === "/start" || text === "/help") {
       await this.tg.sendMessage(
@@ -99,7 +114,8 @@ export class ChatSession {
         "🌿 Hi, I'm NatureBuddy — a nature expert.\n\n" +
           "Ask me about plants, animals, fungi, birds, geology, ecology, or anything in the natural world. " +
           "I can also identify a photo — just send me a picture (with an optional question as the caption).\n\n" +
-          "I research carefully, so detailed answers can take a little while. 🦋",
+          "I research carefully, so detailed answers can take a little while. 🦋\n\n" +
+          "Tip: send /new anytime to start a fresh conversation.",
       );
       return;
     }
