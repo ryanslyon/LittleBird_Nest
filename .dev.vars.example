@@ -1,0 +1,5 @@
+# Copy to .dev.vars for local `wrangler dev`. NEVER commit .dev.vars.
+ANTHROPIC_API_KEY="sk-ant-..."
+TELEGRAM_BOT_TOKEN="123456:ABC-..."
+# Any random 1-256 char [A-Za-z0-9_-] string; must match what you pass to setWebhook.
+TELEGRAM_SECRET_TOKEN="change-me-to-a-long-random-string"
