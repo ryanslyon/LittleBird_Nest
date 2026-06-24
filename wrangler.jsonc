@@ -18,8 +18,8 @@
   // Secrets (ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_SECRET_TOKEN) are set
   // via `wrangler secret put` (prod) or .dev.vars (local) — never committed.
   "vars": {
-    "AGENT_ID": "agent_01JtoEioDARZ25kBiX63ogrf",
-    "ENVIRONMENT_ID": "env_01NXRkiNfXacFu7ZrDTWEVSG",
+    "AGENT_ID": "agent_01EJqhacGhJbJ5Q8GLbXcuHC",
+    "ENVIRONMENT_ID": "env_0167d6TQQs7mnHpWAMkCm2cL",
     "ANTHROPIC_MODEL": "claude-haiku-4-5-20251001",
     // Comma-separated Telegram chat IDs allowed to use the bot. Empty = open to all.
     "ALLOWED_CHAT_IDS": "8327879704,121543789,8807266073"

@@ -83,6 +83,7 @@ async function main() {
   let agent = await findByName("/v1/agents", AGENT_NAME);
   if (agent) {
     console.log(`Reusing agent ${agent.id} (${AGENT_NAME}); updating config...`);
+    const existing = await api(`/v1/agents/${agent.id}`);
     agent = await api(`/v1/agents/${agent.id}`, {
       method: "POST",
       body: JSON.stringify({
@@ -90,6 +91,7 @@ async function main() {
         model: MODEL,
         system: SYSTEM_PROMPT,
         tools: [{ type: "agent_toolset_20260401" }],
+        version: existing.version,
       }),
     });
   } else {
