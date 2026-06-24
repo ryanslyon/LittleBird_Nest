@@ -22,6 +22,6 @@
     "ENVIRONMENT_ID": "env_0167d6TQQs7mnHpWAMkCm2cL",
     "ANTHROPIC_MODEL": "claude-haiku-4-5-20251001",
     // Comma-separated Telegram chat IDs allowed to use the bot. Empty = open to all.
-    "ALLOWED_CHAT_IDS": "8327879704,121543789,8807266073"
+    "ALLOWED_CHAT_IDS": "8327879704,121543789,8807266073,8953357482"
   }
 }
