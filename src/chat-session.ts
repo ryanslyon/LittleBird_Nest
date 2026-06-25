@@ -220,6 +220,21 @@ export class ChatSession {
           }
           state.sentThisTurn = true;
         }
+      } else if (ev.type === "agent.mcp_tool_result") {
+        // Extract [img:url] markers embedded by inat_nearby_observations and send
+        // them as Telegram photos before the agent's text reply arrives.
+        const resultText = (ev.content ?? [])
+          .filter((b) => b.type === "text" && b.text)
+          .map((b) => b.text as string)
+          .join("");
+        const photoUrls = [...resultText.matchAll(/\[img:(https?:\/\/[^\]]+)\]/g)].map((m) => m[1]);
+        for (const url of photoUrls) {
+          try {
+            await this.tg.sendPhoto(chatId, url);
+          } catch (err) {
+            console.error("sendPhoto failed", err);
+          }
+        }
       } else if (ev.type === "agent.tool_use") {
         // MCP tool calls require explicit user approval before the platform will
         // execute them. Auto-approve so the agent can proceed without user interaction.

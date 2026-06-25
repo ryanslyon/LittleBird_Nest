@@ -1,41 +1,61 @@
+export interface Env {
+  INAT_API_TOKEN: string;
+}
+
 interface InatObs {
   id: number;
-  species_guess?: string;
   observed_on?: string;
   taxon?: {
     name?: string;
-    common_name?: { name?: string };
+    preferred_common_name?: string;
   };
+  uri?: string;
+  photos?: Array<{ url?: string }>;
 }
 
-async function fetchNearbyObservations(lat: number, lng: number, d1: string): Promise<InatObs[]> {
+async function fetchNearbyObservations(
+  lat: number, lng: number, d1: string, token: string
+): Promise<InatObs[]> {
   const qs = new URLSearchParams({
-    d1, lat: String(lat), lng: String(lng),
-    radius: "0.05", per_page: "3", order_by: "votes",
+    lat: String(lat), lng: String(lng),
+    radius: "1.6", d1,
+    per_page: "3", order_by: "votes",
+    quality_grade: "research,needs_id",
   });
-  const res = await fetch(`https://www.inaturalist.org/observations.json?${qs}`, {
+  const res = await fetch(`https://api.inaturalist.org/v1/observations?${qs}`, {
     headers: {
       Accept: "application/json",
+      Authorization: `Bearer ${token}`,
       "User-Agent": "CardinalBot/1.0 (contact ryanshen10@gmail.com)",
     },
   });
-  if (!res.ok) throw new Error(`iNaturalist ${res.status}`);
-  const data = await res.json() as InatObs[];
-  return Array.isArray(data) ? data : [];
+  if (!res.ok) throw new Error(`iNaturalist API ${res.status}`);
+  const data = await res.json() as { results?: InatObs[] };
+  return data.results ?? [];
+}
+
+function photoUrl(obs: InatObs): string | null {
+  const raw = obs.photos?.[0]?.url;
+  if (!raw) return null;
+  // iNaturalist photo URLs contain a size segment (square/small/medium/large/original).
+  // Replace whatever size is present with "medium" (~500 px), good for Telegram.
+  return raw.replace(/\/(square|small|medium|large|original)\./, "/medium.");
 }
 
 function formatObservations(obs: InatObs[]): string {
   return obs.map(o => {
-    const name = o.taxon?.common_name?.name ?? o.species_guess ?? o.taxon?.name ?? "Unknown species";
-    const sci = o.taxon?.name && o.taxon.name !== name ? ` (${o.taxon.name})` : "";
+    const common = o.taxon?.preferred_common_name ?? o.taxon?.name ?? "Unknown species";
+    const sci = o.taxon?.preferred_common_name && o.taxon?.name ? ` (${o.taxon.name})` : "";
     const date = o.observed_on ?? "unknown date";
-    const link = `https://www.inaturalist.org/observations/${o.id}`;
-    return `• ${name}${sci} — ${date}\n  ${link}`;
+    const link = o.uri ?? `https://www.inaturalist.org/observations/${o.id}`;
+    const photo = photoUrl(o);
+    const photoLine = photo ? `\n  [img:${photo}]` : "";
+    return `• ${common}${sci} — ${date}\n  ${link}${photoLine}`;
   }).join("\n\n");
 }
 
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: Request, env: Env): Promise<Response> {
     if (request.method !== "POST") {
       return new Response("iNaturalist MCP Server", { status: 200 });
     }
@@ -96,7 +116,7 @@ export default {
 
         let text: string;
         try {
-          const obs = await fetchNearbyObservations(latitude, longitude, d1);
+          const obs = await fetchNearbyObservations(latitude, longitude, d1, env.INAT_API_TOKEN);
           if (obs.length > 0) {
             text = `Recent observations nearby:\n\n${formatObservations(obs)}\n\nFull map:\n${mapUrl}`;
           } else {

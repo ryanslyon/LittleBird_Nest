@@ -74,6 +74,15 @@ export class Telegram {
     }
   }
 
+  /** Sends a photo by URL with an optional caption. */
+  async sendPhoto(chatId: number, photoUrl: string, caption?: string): Promise<void> {
+    await this.call("sendPhoto", {
+      chat_id: chatId,
+      photo: photoUrl,
+      ...(caption ? { caption } : {}),
+    });
+  }
+
   /** Resolves a file_id to a temporary download path. */
   async getFilePath(fileId: string): Promise<string> {
     const result = await this.call<{ file_path: string }>("getFile", { file_id: fileId });
