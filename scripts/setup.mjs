@@ -86,7 +86,11 @@ async function main() {
   ];
   const TOOLS = [
     { type: "agent_toolset_20260401" },
-    { type: "mcp_toolset", mcp_server_name: "inaturalist" },
+    {
+      type: "mcp_toolset",
+      mcp_server_name: "inaturalist",
+      default_config: { enabled: true, permission_policy: { type: "always_allow" } },
+    },
   ];
 
   let agent = await findByName("/v1/agents", AGENT_NAME);
