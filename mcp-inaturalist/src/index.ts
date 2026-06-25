@@ -38,12 +38,7 @@ export class InatMCP extends McpAgent<Env, Record<string, never>, Record<string,
           `&radius=0.05` +
           `&subview=map`;
 
-        const text =
-          `Here are iNaturalist observations near (${latitude}, ${longitude}) from the past year:\n` +
-          `${url}\n\n` +
-          `This map shows all observations within ~50 meters of that location since ${d1}.`;
-
-        return { content: [{ type: "text" as const, text }] };
+        return { content: [{ type: "text" as const, text: url }] };
       }
     );
   }
