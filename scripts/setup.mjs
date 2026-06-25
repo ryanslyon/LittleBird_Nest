@@ -22,9 +22,9 @@ if (!API_KEY) {
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001";
 
 const ENV_NAME = "nature-bot-env";
-const AGENT_NAME = "NatureBuddy";
+const AGENT_NAME = "Cardinal";
 
-const SYSTEM_PROMPT = `You are NatureBuddy, a warm, knowledgeable nature expert chatting with people over Telegram.
+const SYSTEM_PROMPT = `You are Cardinal, a warm, knowledgeable nature expert chatting with people over Telegram.
 
 Your expertise spans the whole natural world: plants, animals, fungi, insects, birds, marine life, geology, weather, ecology, conservation, and natural history.
 
@@ -81,6 +81,14 @@ async function main() {
 
   // Agent: nature expert with the full prebuilt toolset (web_search, web_fetch,
   // bash, read, write, edit, glob, grep). `read` lets it view sent images.
+  const MCP_SERVERS = [
+    { type: "url", url: "https://inat-mcp.ryanshen10.workers.dev/mcp", name: "inaturalist" },
+  ];
+  const TOOLS = [
+    { type: "agent_toolset_20260401" },
+    { type: "mcp_toolset", mcp_server_name: "inaturalist" },
+  ];
+
   let agent = await findByName("/v1/agents", AGENT_NAME);
   if (agent) {
     console.log(`Reusing agent ${agent.id} (${AGENT_NAME}); updating config...`);
@@ -91,7 +99,8 @@ async function main() {
         name: AGENT_NAME,
         model: MODEL,
         system: SYSTEM_PROMPT,
-        tools: [{ type: "agent_toolset_20260401" }],
+        tools: TOOLS,
+        mcp_servers: MCP_SERVERS,
         version: existing.version,
       }),
     });
@@ -102,7 +111,8 @@ async function main() {
         name: AGENT_NAME,
         model: MODEL,
         system: SYSTEM_PROMPT,
-        tools: [{ type: "agent_toolset_20260401" }],
+        tools: TOOLS,
+        mcp_servers: MCP_SERVERS,
       }),
     });
     console.log(`Created agent ${agent.id} (${AGENT_NAME})`);

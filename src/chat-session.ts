@@ -111,7 +111,7 @@ export class ChatSession {
     if (text === "/start" || text === "/help") {
       await this.tg.sendMessage(
         chatId,
-        "🌿 Hi, I'm NatureBuddy — a nature expert.\n\n" +
+        "🌿 Hi, I'm Cardinal — a nature expert.\n\n" +
           "Ask me about plants, animals, fungi, birds, geology, ecology, or anything in the natural world. " +
           "I can also identify a photo — just send me a picture (with an optional question as the caption).\n\n" +
           "I research carefully, so detailed answers can take a little while. 🦋\n\n" +
