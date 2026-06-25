@@ -132,6 +132,9 @@ export class ChatSession {
       const mountPath = await this.ingestImage(sessionId, photo.fileId);
       const note = `[The user sent an image. It is saved in the container at ${mountPath}. Use your \`read\` tool to view the image, then answer.]`;
       userText = text ? `${note}\n\nUser's message: ${text}` : `${note}\n\nIdentify what's in this image and tell me about it.`;
+    } else if (msg.location) {
+      const { latitude, longitude } = msg.location;
+      userText = `My location: latitude ${latitude}, longitude ${longitude}`;
     }
 
     if (!userText) return; // nothing actionable (e.g. a sticker)

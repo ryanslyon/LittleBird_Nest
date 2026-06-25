@@ -16,12 +16,18 @@ export interface TgPhotoSize {
   file_size?: number;
 }
 
+export interface TgLocation {
+  latitude: number;
+  longitude: number;
+}
+
 export interface TgMessage {
   message_id: number;
   chat: TgChat;
   text?: string;
   caption?: string;
   photo?: TgPhotoSize[];
+  location?: TgLocation;
 }
 
 export interface TgUpdate {
