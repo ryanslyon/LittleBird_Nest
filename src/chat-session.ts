@@ -149,7 +149,27 @@ export class ChatSession {
     }
     state.polls = 0; // (re)start the budget for this turn
 
-    await this.ma.sendUserMessage(sessionId, userText);
+    try {
+      await this.ma.sendUserMessage(sessionId, userText);
+    } catch (err: unknown) {
+      // If the session is stuck waiting for a tool confirmation, reset it and
+      // start a fresh session so the user isn't permanently blocked.
+      const msg2 = err instanceof Error ? err.message : String(err);
+      if (msg2.includes("waiting on responses")) {
+        console.warn("session stuck waiting for tool confirmation — resetting session");
+        const fresh = await this.ma.createSession(
+          this.env.AGENT_ID,
+          this.env.ENVIRONMENT_ID,
+          `Telegram chat ${chatId}`,
+        );
+        state.sessionId = fresh.id;
+        state.cursorTs = "";
+        state.recentIds = [];
+        await this.ma.sendUserMessage(fresh.id, userText);
+      } else {
+        throw err;
+      }
+    }
 
     state.active = true;
     await this.save(state);
@@ -180,6 +200,7 @@ export class ChatSession {
 
     const fresh = newEvents(events, state.cursorTs, state.recentIds);
     let terminal = false;
+    const toolUseIdsToConfirm: string[] = [];
     for (const ev of fresh) {
       if (ev.type === "agent.message") {
         const out = (ev.content ?? [])
@@ -196,12 +217,26 @@ export class ChatSession {
           }
           state.sentThisTurn = true;
         }
+      } else if (ev.type === "agent.tool_use") {
+        // MCP tool calls require explicit user approval before the platform will
+        // execute them. Auto-approve so the agent can proceed without user interaction.
+        toolUseIdsToConfirm.push(ev.id);
       } else if (ev.type === "session.error") {
         try {
           await this.tg.sendMessage(chatId, "🌿 The research run hit an error. Please try again.");
         } catch {}
       }
       if (isTerminalIdle(ev) || ev.type === "session.status_terminated") terminal = true;
+    }
+
+    // Send confirmations for any pending MCP tool calls so the agent can proceed.
+    if (toolUseIdsToConfirm.length > 0 && !terminal) {
+      try {
+        await this.ma.confirmToolUse(sessionId, toolUseIdsToConfirm);
+        console.log(`auto-confirmed ${toolUseIdsToConfirm.length} tool use event(s)`);
+      } catch (err) {
+        console.error("confirmToolUse failed", err);
+      }
     }
 
     // Advance the cursor past everything we've now observed.

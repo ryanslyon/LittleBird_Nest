@@ -78,6 +78,21 @@ export class ManagedAgents {
     return data.data ?? [];
   }
 
+  /** Auto-approves pending agent tool-use events so MCP calls can proceed. */
+  async confirmToolUse(sessionId: string, toolUseEventIds: string[]): Promise<void> {
+    if (toolUseEventIds.length === 0) return;
+    await this.json(`/v1/sessions/${sessionId}/events`, {
+      method: "POST",
+      body: JSON.stringify({
+        events: toolUseEventIds.map((id) => ({
+          type: "user.tool_confirmation",
+          tool_use_event_id: id,
+          confirmation: { type: "allow_session" },
+        })),
+      }),
+    });
+  }
+
   // --- Files & resources (image ingestion) -----------------------------
 
   /** Uploads bytes to the Files API and returns the file id. */
