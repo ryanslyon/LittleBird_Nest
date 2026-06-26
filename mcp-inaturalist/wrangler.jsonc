@@ -7,5 +7,12 @@
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["InatMCP"] },
     { "tag": "v2", "deleted_classes": ["InatMCP"] }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "inat-seen-obs",
+      "database_id": "ddaa00a3-5f68-48ce-ba3b-36551a476566"
+    }
   ]
 }

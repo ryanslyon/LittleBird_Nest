@@ -134,7 +134,7 @@ export class ChatSession {
       userText = text ? `${note}\n\nUser's message: ${text}` : `${note}\n\nIdentify what's in this image and tell me about it.`;
     } else if (msg.location) {
       const { latitude, longitude } = msg.location;
-      userText = `My location: latitude ${latitude}, longitude ${longitude}`;
+      userText = `My location: latitude ${latitude}, longitude ${longitude} [user_id: ${chatId}]`;
     }
 
     if (!userText) return; // nothing actionable (e.g. a sticker)
