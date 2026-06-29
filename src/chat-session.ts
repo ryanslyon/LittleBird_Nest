@@ -135,6 +135,22 @@ export class ChatSession {
     } else if (msg.location) {
       const { latitude, longitude } = msg.location;
       userText = `My location: latitude ${latitude}, longitude ${longitude} [user_id: ${chatId}]`;
+    } else if (msg.voice) {
+      try {
+        const filePath = await this.tg.getFilePath(msg.voice.file_id);
+        const bytes = await this.tg.downloadFile(filePath);
+        const result = await (this.env.AI as Ai).run("@cf/openai/whisper" as Parameters<Ai["run"]>[0], {
+          audio: [...new Uint8Array(bytes)],
+        }) as { text?: string };
+        const transcript = result.text?.trim() ?? "";
+        if (transcript) {
+          userText = `[The user sent a voice message. Transcription: "${transcript}"] [user_id: ${chatId}]`;
+        }
+      } catch (err) {
+        console.error("voice transcription failed", err);
+        await this.tg.sendMessage(chatId, "🌿 Sorry, I couldn't transcribe that voice message. Please try again.");
+        return;
+      }
     }
 
     if (!userText) return; // nothing actionable (e.g. a sticker)

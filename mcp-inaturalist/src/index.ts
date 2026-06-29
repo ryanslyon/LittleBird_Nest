@@ -96,6 +96,48 @@ function formatObservations(obs: InatObs[]): string {
 
 const TOOLS = [
   {
+    name: "get_journey_summary",
+    description:
+      "Retrieves the full data for the user's most recent journey: name, duration, voice memo transcription, " +
+      "number of observations, and number of distinct locations. Use this to compile an experience log after " +
+      "the voice memo has been saved.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        user_id: { type: "string", description: "Telegram chat ID" },
+      },
+      required: ["user_id"],
+    },
+  },
+  {
+    name: "save_experience_log",
+    description:
+      "Saves a condensed, human-readable experience log to the user's most recent journey. " +
+      "Call this after you have compiled the log from get_journey_summary, then send the log text to the user.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        user_id: { type: "string", description: "Telegram chat ID" },
+        log: { type: "string", description: "The condensed experience log text to save" },
+      },
+      required: ["user_id", "log"],
+    },
+  },
+  {
+    name: "save_journey_notes",
+    description:
+      "Saves transcribed voice notes to the user's most recent journey. " +
+      "Call this after receiving a voice message transcription that the user sent as a journey recap.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        user_id: { type: "string", description: "Telegram chat ID" },
+        notes: { type: "string", description: "Transcribed text to save as journey notes" },
+      },
+      required: ["user_id", "notes"],
+    },
+  },
+  {
     name: "inat_nearby_observations",
     description:
       "Fetches recent iNaturalist observations within 100 ft of a location that this user has not " +
@@ -229,6 +271,129 @@ export default {
           return Response.json({ jsonrpc: "2.0", id, result: { content: [{ type: "text", text }] } });
         }
 
+        // ── get_journey_summary ───────────────────────────────────────────────
+        if (toolName === "get_journey_summary") {
+          const { user_id } = args as { user_id?: string };
+          if (!user_id) {
+            return Response.json({
+              jsonrpc: "2.0", id,
+              error: { code: -32602, message: "user_id is required" },
+            });
+          }
+
+          const journey = await env.DB
+            .prepare(
+              "SELECT id, name, started_at, ended_at, notes, experience_log FROM journeys " +
+              "WHERE chat_id = ? ORDER BY COALESCE(ended_at, started_at) DESC LIMIT 1"
+            )
+            .bind(user_id)
+            .first<{ id: number; name: string | null; started_at: string; ended_at: string | null; notes: string | null; experience_log: string | null }>();
+
+          if (!journey) {
+            return Response.json({
+              jsonrpc: "2.0", id,
+              result: { content: [{ type: "text", text: "No journey found." }] },
+            });
+          }
+
+          const obsRow = await env.DB
+            .prepare("SELECT COUNT(*) as count FROM seen_observations WHERE journey_id = ?")
+            .bind(journey.id)
+            .first<{ count: number }>();
+
+          const locRows = await env.DB
+            .prepare("SELECT DISTINCT latitude, longitude FROM seen_observations WHERE journey_id = ? AND latitude IS NOT NULL")
+            .bind(journey.id)
+            .all<{ latitude: number; longitude: number }>();
+
+          const startMs = new Date(journey.started_at.replace(" ", "T") + "Z").getTime();
+          const endMs = journey.ended_at ? new Date(journey.ended_at.replace(" ", "T") + "Z").getTime() : Date.now();
+          const minutes = Math.round((endMs - startMs) / 60000);
+          const duration = minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+
+          const parts = [
+            `Journey: "${journey.name ?? "Unnamed journey"}"`,
+            `Duration: ${duration}`,
+            `Observations logged: ${obsRow?.count ?? 0}`,
+            `Locations visited: ${(locRows.results ?? []).length}`,
+            `Started: ${journey.started_at} UTC`,
+            journey.ended_at ? `Ended: ${journey.ended_at} UTC` : "Status: active",
+            journey.notes ? `\nVoice memo transcription:\n"${journey.notes}"` : "No voice memo recorded.",
+          ];
+
+          return Response.json({
+            jsonrpc: "2.0", id,
+            result: { content: [{ type: "text", text: parts.join("\n") }] },
+          });
+        }
+
+        // ── save_experience_log ───────────────────────────────────────────────
+        if (toolName === "save_experience_log") {
+          const { user_id, log } = args as { user_id?: string; log?: string };
+          if (!user_id || !log) {
+            return Response.json({
+              jsonrpc: "2.0", id,
+              error: { code: -32602, message: "user_id and log are required" },
+            });
+          }
+
+          const journey = await env.DB
+            .prepare("SELECT id, name FROM journeys WHERE chat_id = ? ORDER BY COALESCE(ended_at, started_at) DESC LIMIT 1")
+            .bind(user_id)
+            .first<{ id: number; name: string | null }>();
+
+          if (!journey) {
+            return Response.json({
+              jsonrpc: "2.0", id,
+              result: { content: [{ type: "text", text: "No journey found to attach the log to." }] },
+            });
+          }
+
+          await env.DB
+            .prepare("UPDATE journeys SET experience_log = ? WHERE id = ?")
+            .bind(log, journey.id)
+            .run();
+
+          return Response.json({
+            jsonrpc: "2.0", id,
+            result: { content: [{ type: "text", text: `Experience log saved for journey "${journey.name ?? "Unnamed journey"}".` }] },
+          });
+        }
+
+        // ── save_journey_notes ────────────────────────────────────────────────
+        if (toolName === "save_journey_notes") {
+          const { user_id, notes } = args as { user_id?: string; notes?: string };
+          if (!user_id || !notes) {
+            return Response.json({
+              jsonrpc: "2.0", id,
+              error: { code: -32602, message: "user_id and notes are required" },
+            });
+          }
+
+          const journey = await env.DB
+            .prepare("SELECT id, name FROM journeys WHERE chat_id = ? ORDER BY COALESCE(ended_at, started_at) DESC LIMIT 1")
+            .bind(user_id)
+            .first<{ id: number; name: string | null }>();
+
+          if (!journey) {
+            return Response.json({
+              jsonrpc: "2.0", id,
+              result: { content: [{ type: "text", text: "No journey found to attach notes to." }] },
+            });
+          }
+
+          await env.DB
+            .prepare("UPDATE journeys SET notes = ? WHERE id = ?")
+            .bind(notes, journey.id)
+            .run();
+
+          const journeyName = journey.name ?? "Unnamed journey";
+          return Response.json({
+            jsonrpc: "2.0", id,
+            result: { content: [{ type: "text", text: `Voice memo saved to journey "${journeyName}". Notes: "${notes}"` }] },
+          });
+        }
+
         // ── start_journey ─────────────────────────────────────────────────────
         if (toolName === "start_journey") {
           const { user_id, name } = args as { user_id?: string; name?: string };
@@ -319,7 +484,8 @@ export default {
             `Observations logged: ${obsCount}\n` +
             `Locations checked: ${locationCount}\n` +
             `Started: ${started} UTC\n` +
-            `Ended: ${ended} UTC`;
+            `Ended: ${ended} UTC\n` +
+            `[VOICE_MEMO_PROMPT]`;
 
           return Response.json({ jsonrpc: "2.0", id, result: { content: [{ type: "text", text }] } });
         }

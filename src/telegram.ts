@@ -21,6 +21,14 @@ export interface TgLocation {
   longitude: number;
 }
 
+export interface TgVoice {
+  file_id: string;
+  file_unique_id: string;
+  duration: number;
+  mime_type?: string;
+  file_size?: number;
+}
+
 export interface TgMessage {
   message_id: number;
   chat: TgChat;
@@ -28,6 +36,7 @@ export interface TgMessage {
   caption?: string;
   photo?: TgPhotoSize[];
   location?: TgLocation;
+  voice?: TgVoice;
 }
 
 export interface TgUpdate {

@@ -17,6 +17,8 @@
   // Non-secret config. AGENT_ID / ENVIRONMENT_ID are filled in by `npm run setup`.
   // Secrets (ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_SECRET_TOKEN) are set
   // via `wrangler secret put` (prod) or .dev.vars (local) — never committed.
+  "ai": { "binding": "AI" },
+
   "vars": {
     "AGENT_ID": "agent_01EJqhacGhJbJ5Q8GLbXcuHC",
     "ENVIRONMENT_ID": "env_0167d6TQQs7mnHpWAMkCm2cL",
