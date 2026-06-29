@@ -22,6 +22,27 @@ interface Persisted {
   rateNotified: boolean; // have we already warned during the current burst
 }
 
+// Whisper hallucinates looping phrases on short/quiet audio. Strip them.
+function deduplicateTranscript(text: string): string {
+  if (!text) return "";
+  // Split on sentence boundaries and newlines, discard blanks.
+  const segments = text.split(/(?<=[.!?,])\s+|\n+/).map(s => s.trim()).filter(Boolean);
+  if (segments.length < 3) return text;
+
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const seg of segments) {
+    const key = seg.toLowerCase().replace(/[^a-z0-9 ]/g, "");
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(seg);
+    }
+  }
+  // If we deduped more than half the segments, the whole thing was likely a loop.
+  if (out.length < segments.length / 2) return out.slice(0, 3).join(" ");
+  return out.join(" ");
+}
+
 const DEFAULT_STATE: Persisted = {
   cursorTs: "",
   recentIds: [],
@@ -142,9 +163,12 @@ export class ChatSession {
         const result = await (this.env.AI as Ai).run("@cf/openai/whisper" as Parameters<Ai["run"]>[0], {
           audio: [...new Uint8Array(bytes)],
         }) as { text?: string };
-        const transcript = result.text?.trim() ?? "";
+        const transcript = deduplicateTranscript(result.text?.trim() ?? "");
         if (transcript) {
           userText = `[The user sent a voice message. Transcription: "${transcript}"] [user_id: ${chatId}]`;
+        } else {
+          await this.tg.sendMessage(chatId, "🌿 I couldn't make out anything in that recording — could you try again?");
+          return;
         }
       } catch (err) {
         console.error("voice transcription failed", err);
