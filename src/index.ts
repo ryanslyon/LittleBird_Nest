@@ -15,7 +15,6 @@ export interface Env {
   ALLOWED_CHAT_IDS: string;
   // Bindings
   CHAT_SESSION: DurableObjectNamespace;
-  AI: Ai;
 }
 
 export { ChatSession };
@@ -43,7 +42,7 @@ export default {
       }
       if (!env.AGENT_ID || !env.ENVIRONMENT_ID) {
         return new Response("not configured: run `npm run setup`", { status: 503 });
-      }
+      } 
 
       let update: TgUpdate;
       try {
