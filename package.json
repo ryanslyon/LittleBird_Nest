@@ -2,7 +2,7 @@
   "name": "nature-bot",
   "version": "1.0.0",
   "private": true,
-  "description": "NatureBuddy — a nature-expert Telegram bot powered by Claude Managed Agents, running on Cloudflare Workers + Durable Objects.",
+  "description": "Cardinal — a nature-expert Telegram bot powered by Claude Managed Agents, running on Cloudflare Workers + Durable Objects.",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",

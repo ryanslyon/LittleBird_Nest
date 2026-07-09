@@ -1,54 +1,64 @@
-# 🌿 NatureBuddy — a nature-expert Telegram bot
+# Cardinal — a nature-expert Telegram bot
 
-A Telegram chatbot that answers questions about the natural world — plants,
-animals, fungi, birds, geology, ecology — and **identifies photos** you send it.
-It does real research (web search + fetch) before answering.
+A Telegram chatbot that answers questions about the natural world, identifies
+photos you send it, and surfaces real iNaturalist sightings near you as you
+walk — powered by **Claude Managed Agents** and **Cloudflare Workers**.
 
-It's powered by **Claude Managed Agents** (Anthropic hosts the agent loop, the
-research tools, and the sandbox) and a tiny **Cloudflare Worker + Durable
-Object** that bridges Telegram to the agent.
+## Overview
+
+Cardinal is a Telegram bot for exploring and learning about the outdoors. Ask
+it about plants, animals, fungi, birds, geology, or ecology and it does real
+research (web search + fetch) before answering; send it a photo and it
+identifies what's in it. Share your location and it queries the iNaturalist
+API for verified observations within 100 ft, filtering out anything you've
+already seen. Tell it you're starting a walk and it opens a "journey" that
+groups your observations together, prompts you for a voice-memo recap when
+you're done, transcribes it, and saves a condensed experience log.
+
+It's built for anyone curious about what's actually living around them —
+naturalists, hikers, students, or a parent walking with kids — who wants a
+low-friction way to get expert-quality answers and real citizen-science data
+without leaving a chat window.
+
+## Educational Context
+
+*(Fill in for your program/course — placeholder based on the CFA GenAI
+Toolmaking residency context.)* Cardinal pairs generative AI with real
+citizen-science data (iNaturalist) to support field-based environmental
+science and ecology education — e.g., prompting close observation on a nature
+walk, reinforcing species identification skills, and giving students a
+low-effort way to log and reflect on field observations via voice memo.
 
 ## Architecture
 
+Cardinal is two independently deployable Cloudflare Workers: the Telegram bot
+(this repo's root) and an iNaturalist MCP server (`mcp-inaturalist/`) that the
+agent calls as a tool. See [docs/architecture.md](docs/architecture.md) for
+the full system design and [docs/mcp-server.md](docs/mcp-server.md) for the
+MCP tool reference.
+
 ```
-Telegram  ──webhook──▶  Cloudflare Worker  ──▶  Durable Object (one per chat)
-                         (verify + route)         │
-                                                   ├─ maps chat → a persistent
-                                                   │  Managed Agent *session*
-                                                   │  (conversation memory)
-                                                   ├─ acks Telegram instantly,
-                                                   │  then polls via DO *alarms*
-                                                   ▼
-                                   Anthropic Managed Agents API
-                                   (Agent: NatureBuddy + prebuilt toolset:
-                                    web_search, web_fetch, bash, read, …)
+Telegram ──webhook──▶ Cloudflare Worker ──▶ Durable Object (one per chat)
+                                              │
+                                              ├─ persistent Managed Agent session
+                                              ├─ acks Telegram instantly, polls via DO alarm
+                                              ▼
+                                  Anthropic Managed Agents API (Agent: Cardinal)
+                                              │
+                                              ▼
+                                  inat-mcp Worker ──▶ iNaturalist API + D1
 ```
 
-- **Webhook, not polling.** Telegram pushes updates to `/telegram/webhook`,
-  verified by a secret header.
-- **Durable Object per chat.** Holds the chat's long-lived agent session, so
-  conversation memory is free. Because a research run can take minutes (far
-  longer than a webhook may stay open), the DO acks Telegram in <1s and uses
-  **DO alarms** to poll the session and stream replies back as they arrive.
-- **Images.** A sent photo is downloaded from Telegram, uploaded via the Files
-  API, mounted into the agent's container as a session resource, and read by the
-  agent's `read` tool (which can view images).
+## Installation
 
-## Files
+### Prerequisites
 
-| Path | Purpose |
-|---|---|
-| `src/index.ts` | Worker entry: routes, webhook auth, fan-out to the DO |
-| `src/chat-session.ts` | Durable Object: per-chat session + alarm-driven run loop |
-| `src/anthropic.ts` | Managed Agents REST client (sessions, events, files) |
-| `src/telegram.ts` | Telegram Bot API client |
-| `scripts/setup.mjs` | One-time: create the Agent + Environment, write IDs to `wrangler.jsonc` |
-| `scripts/set-webhook.mjs` | Register / delete the Telegram webhook |
+- Node 18+
+- A Cloudflare account
+- An Anthropic API key
+- A Telegram bot token (from [@BotFather](https://t.me/BotFather))
 
-## Setup & deploy
-
-Prereqs: Node 18+, a Cloudflare account, an Anthropic API key, a Telegram bot
-token (from [@BotFather](https://t.me/BotFather)).
+### Steps
 
 ```bash
 npm install
@@ -71,12 +81,22 @@ WEBHOOK_URL=https://nature-bot.<subdomain>.workers.dev/telegram/webhook \
   npm run set-webhook
 ```
 
-Then open Telegram, find your bot, send `/start`, and chat. Send a photo to get
-an identification.
+The `mcp-inaturalist/` Worker (iNaturalist tool server) is deployed
+separately — see [docs/mcp-server.md](docs/mcp-server.md).
 
-Useful: `npm run set-webhook -- --info` (inspect), `-- --delete` (remove).
+## Usage
 
-## Local development
+Open Telegram, find your bot, send `/start`, and chat. Send a photo for an
+identification, share your location for nearby sightings, or say "starting a
+walk" / "heading home" to bracket a journey.
+
+```bash
+npm run set-webhook -- --info    # inspect the current webhook
+npm run set-webhook -- --delete  # remove it
+```
+
+For local development and sample request payloads, see
+[examples/telegram-webhook-payloads.md](examples/telegram-webhook-payloads.md):
 
 ```bash
 cp .dev.vars.example .dev.vars     # fill in real secrets (gitignored)
@@ -84,60 +104,42 @@ ANTHROPIC_API_KEY=sk-ant-... npm run setup
 npm run dev                        # wrangler dev on http://127.0.0.1:8787
 ```
 
-`/healthz` shows config. Simulate a Telegram update (the secret must match
-`.dev.vars`):
-
-```bash
-curl -X POST http://127.0.0.1:8787/telegram/webhook \
-  -H 'content-type: application/json' \
-  -H 'x-telegram-bot-api-secret-token: <TELEGRAM_SECRET_TOKEN>' \
-  -d '{"update_id":1,"message":{"message_id":1,"chat":{"id":<YOUR_CHAT_ID>},"text":"What is a tardigrade?"}}'
-```
-
-To receive the reply on Telegram during local dev, use a real `chat.id` (message
-the bot once and read it from `https://api.telegram.org/bot<token>/getUpdates`,
-with the webhook unset) and expose `wrangler dev` over a tunnel.
-
 ## Tests & CI/CD
 
 ```bash
-npm test          # vitest unit tests (cursor math, message splitting, idle detection, photo pick)
+npm test          # vitest unit tests
 npm run typecheck # tsc --noEmit
 npm run build:check  # wrangler deploy --dry-run (offline bundle validation)
 ```
 
-GitHub Actions:
-- **`.github/workflows/ci.yml`** — runs on every push/PR: typecheck → unit tests → build dry-run. No secrets needed.
-- **`.github/workflows/deploy.yml`** — runs on push to `main` (and manual dispatch): typecheck → tests → `wrangler deploy`.
+GitHub Actions (`.github/workflows/`):
+- **`ci.yml`** — runs on every push/PR: typecheck → unit tests → build dry-run. No secrets needed.
+- **`deploy.yml`** — runs on push to `main` (and manual dispatch): typecheck → tests → `wrangler deploy`.
 
-**Required repo secrets** (Settings → Secrets and variables → Actions) for the deploy workflow:
+Required repo secrets for the deploy workflow (Settings → Secrets and
+variables → Actions):
 
 | Secret | Value |
 |---|---|
-| `CLOUDFLARE_API_TOKEN` | A token with **Workers Scripts: Edit** (the "Edit Cloudflare Workers" template works) |
+| `CLOUDFLARE_API_TOKEN` | A token with **Workers Scripts: Edit** |
 | `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID |
 
-The Worker's *application* secrets (`ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_SECRET_TOKEN`) are stored in Cloudflare via `wrangler secret put` and **persist across deploys**, so the deploy workflow doesn't touch them. Rotate them with `wrangler secret put` (or re-run the command locally) — not through GitHub.
+The Worker's application secrets (`ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`,
+`TELEGRAM_SECRET_TOKEN`) live in Cloudflare via `wrangler secret put` and
+persist across deploys — rotate them there, not through GitHub.
 
-## Configuration
+## Contributing
 
-Non-secret (`wrangler.jsonc` → `vars`, set by `npm run setup`):
-`AGENT_ID`, `ENVIRONMENT_ID`, `ANTHROPIC_MODEL` (default
-`claude-haiku-4-5-20251001`).
+We welcome contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for
+guidelines.
 
-Secrets (`wrangler secret put` / `.dev.vars`): `ANTHROPIC_API_KEY`,
-`TELEGRAM_BOT_TOKEN`, `TELEGRAM_SECRET_TOKEN`.
+## License
 
-Re-running `npm run setup` is idempotent: it reuses the Agent/Environment by
-name and re-applies the system prompt, so edit the prompt in `scripts/setup.mjs`
-and re-run to update the agent.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for
+details.
 
-## Notes & limitations
+## Credits and Acknowledgments
 
-- Replies are sent as plain text (no Telegram Markdown) to avoid parser errors
-  on the agent's free-form prose.
-- The DO polls one page of session events (`limit=1000`). A single chat's
-  session would need ~100+ turns to approach that; for very long-lived chats,
-  rotating the session would be the next step.
-- Model is `claude-haiku-4-5-20251001` (per the testing requirement). Change
-  `ANTHROPIC_MODEL` and re-run `npm run setup` to use a more capable model.
+Developed as part of the CFA GenAI Toolmaking for the Arts Residency at
+Carnegie Mellon University, supported by the College of Fine Arts and the
+Frank-Ratchye STUDIO for Creative Inquiry.
