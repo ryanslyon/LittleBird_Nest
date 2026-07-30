@@ -150,32 +150,28 @@ npm run dev                        # wrangler dev on http://127.0.0.1:8787
 
 Screenshots for each capability go in [`assets/`](assets/)
 <br>
-<p align="left">
-  <b>Ask a question and get researched answers</b>
-  <br>
-  <img src="assets/2606_LittleBird_gif_Cardinal_Demo_04.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_04.gif" width="300">
-  <br>
-</p>
-<p align="left">
-  <b>Identify a photo</b>
-  <br>
-  <img src="assets/2606_LittleBird_gif_Cardinal_Demo_01.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_01.gif" width="300">
-  <br>
-</p>
-<p align="left">
-  <b>Nearby iNaturalist sightings from a shared location</b>
-  <br>
-  <img src="assets/2606_LittleBird_gif_Cardinal_Demo_02.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_02.gif" width="300">
-  <br>
-</p>
-<p align="left">
-  <b>Starting and ending a journey</b>
-  <br>
-  <b>Voice memo → transcription → journey notes</b>
-  <br>
-  <img src="assets/2606_LittleBird_gif_Cardinal_Demo_03.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_03.gif" width="300">
-  <br>
-</p>
+<div align="center">
+   <table>
+    <tr>
+      <td><b>Ask a question and get researched answers</b></td>
+      <td><b>Identify a photo</b></td>
+    </tr>
+    <tr>
+      <td><img src="assets/2606_LittleBird_gif_Cardinal_Demo_04.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_04.gif" width="250"></td>
+      <td><img src="assets/2606_LittleBird_gif_Cardinal_Demo_01.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_01.gif" width="250"></td>
+      <br>
+    </tr>
+    <tr>
+      <td><b>Nearby iNaturalist sightings from a shared location</b></td>
+      <td><b>Voice memo → transcription → journey notes</b></td>
+    </tr>
+    <tr>
+      <td><img src="assets/2606_LittleBird_gif_Cardinal_Demo_02.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_02.gif" width="250"></td>
+      <td><img src="assets/2606_LittleBird_gif_Cardinal_Demo_03.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_03.gif" width="250"></td>
+      <br>
+    </tr>
+  </table>
+</div>
 
 ## Tests & CI/CD
 
