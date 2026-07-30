@@ -155,7 +155,7 @@ export class ChatSession {
       userText = text ? `${note}\n\nUser's message: ${text}` : `${note}\n\nIdentify what's in this image and tell me about it.`;
     } else if (msg.location) {
       const { latitude, longitude } = msg.location;
-      userText = `My location: latitude ${latitude}, longitude ${longitude} [user_id: ${chatId}]`;
+      userText = `My location: latitude ${latitude}, longitude ${longitude}`;
     } else if (msg.voice) {
       try {
         const filePath = await this.tg.getFilePath(msg.voice.file_id);
@@ -165,7 +165,7 @@ export class ChatSession {
         }) as { text?: string };
         const transcript = deduplicateTranscript(result.text?.trim() ?? "");
         if (transcript) {
-          userText = `[The user sent a voice message. Transcription: "${transcript}"] [user_id: ${chatId}]`;
+          userText = `[The user sent a voice message. Transcription: "${transcript}"]`;
         } else {
           await this.tg.sendMessage(chatId, "🌿 I couldn't make out anything in that recording — could you try again?");
           return;
@@ -178,6 +178,10 @@ export class ChatSession {
     }
 
     if (!userText) return; // nothing actionable (e.g. a sticker)
+
+    // Every message carries the chat's Telegram ID so the agent never needs to
+    // ask for it before calling a user-scoped MCP tool (journeys, observations).
+    userText = `${userText} [user_id: ${chatId}]`;
 
     const state = await this.load();
 

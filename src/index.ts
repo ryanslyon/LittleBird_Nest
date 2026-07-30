@@ -15,6 +15,7 @@ export interface Env {
   ALLOWED_CHAT_IDS: string;
   // Bindings
   CHAT_SESSION: DurableObjectNamespace;
+  AI: Ai;
 }
 
 export { ChatSession };
