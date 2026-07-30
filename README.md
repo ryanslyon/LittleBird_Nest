@@ -154,15 +154,15 @@ Screenshots for each capability go in [`assets/`](assets/)
 
 
 **Identify a photo**
-`assets/2606_LittleBird_gif_Cardinal_Demo_01.gif`
+![`assets/2606_LittleBird_gif_Cardinal_Demo_01.gif`](assets/2606_LittleBird_gif_Cardinal_Demo_01.gif)
 
 **Nearby iNaturalist sightings from a shared location**
-`assets/2606_LittleBird_gif_Cardinal_Demo_02.gif`
+![`assets/2606_LittleBird_gif_Cardinal_Demo_02.gif`](assets/2606_LittleBird_gif_Cardinal_Demo_02.gif)
 
 **Starting and ending a journey**
 
 **Voice memo → transcription → journey notes**
-`assets/2606_LittleBird_gif_Cardinal_Demo_03.gif`
+![`assets/2606_LittleBird_gif_Cardinal_Demo_03.gif`](assets/2606_LittleBird_gif_Cardinal_Demo_03.gif)
 
 
 ## Tests & CI/CD
