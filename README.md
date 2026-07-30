@@ -148,26 +148,22 @@ npm run dev                        # wrangler dev on http://127.0.0.1:8787
 
 ## Prototype Demonstrations
 
-Screenshots for each capability go in [`assets/`](assets/) — replace the
-placeholders below as they're captured.
+Screenshots for each capability go in [`assets/`](assets/)
 
 **Ask a question and get researched answers**
-[MEDIA PLACEHOLDER: Screenshot of a text Q&A exchange, e.g. `assets/qa.png`]
+
 
 **Identify a photo**
-[MEDIA PLACEHOLDER: Screenshot of a sent photo and Cardinal's identification reply, e.g. `assets/photo-id.png`]
+`assets/2606_LittleBird_gif_Cardinal_Demo_01.gif`
 
 **Nearby iNaturalist sightings from a shared location**
-[MEDIA PLACEHOLDER: Screenshot of a shared location pin and the returned nearby-observations list with photos, e.g. `assets/nearby-observations.png`]
+`assets/2606_LittleBird_gif_Cardinal_Demo_02.gif`
 
 **Starting and ending a journey**
-[MEDIA PLACEHOLDER: Screenshot of the "starting a walk" / "heading home" exchange and the journey summary, e.g. `assets/journey-start-end.png`]
 
 **Voice memo → transcription → journey notes**
-[MEDIA PLACEHOLDER: Screenshot or short clip of a voice message being sent and transcribed, e.g. `assets/voice-transcription.png`]
+`assets/2606_LittleBird_gif_Cardinal_Demo_03.gif`
 
-**AI-condensed experience log**
-[MEDIA PLACEHOLDER: Screenshot of the final experience-log message sent back to the user, e.g. `assets/experience-log.png`]
 
 ## Tests & CI/CD
 
