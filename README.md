@@ -149,21 +149,23 @@ npm run dev                        # wrangler dev on http://127.0.0.1:8787
 ## Prototype Demonstrations
 
 Screenshots for each capability go in [`assets/`](assets/)
-
+<br>
 **Ask a question and get researched answers**
-
-
+<br>
 **Identify a photo**
-**![`assets/2606_LittleBird_gif_Cardinal_Demo_01.gif`](assets/2606_LittleBird_gif_Cardinal_Demo_01.gif)**
-
+<br>
+![`assets/2606_LittleBird_gif_Cardinal_Demo_01.gif`](assets/2606_LittleBird_gif_Cardinal_Demo_01.gif)
+<br>
 **Nearby iNaturalist sightings from a shared location**
-**![`assets/2606_LittleBird_gif_Cardinal_Demo_02.gif`](assets/2606_LittleBird_gif_Cardinal_Demo_02.gif)**
-
+<br>
+![`assets/2606_LittleBird_gif_Cardinal_Demo_02.gif`](assets/2606_LittleBird_gif_Cardinal_Demo_02.gif)**
+<br>
 **Starting and ending a journey**
-
+<br>
 **Voice memo → transcription → journey notes**
-**![`assets/2606_LittleBird_gif_Cardinal_Demo_03.gif`](assets/2606_LittleBird_gif_Cardinal_Demo_03.gif)**
-
+<br>
+![`assets/2606_LittleBird_gif_Cardinal_Demo_03.gif`](assets/2606_LittleBird_gif_Cardinal_Demo_03.gif)
+<br>
 
 ## Tests & CI/CD
 
