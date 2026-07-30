@@ -149,20 +149,32 @@ npm run dev                        # wrangler dev on http://127.0.0.1:8787
 ## Prototype Demonstrations
 
 Screenshots for each capability go in [`assets/`](assets/)
-**Ask a question and get researched answers**
-<p align="center">
-  **Identify a photo**
+<br>
+<p align="left">
+  <b>Ask a question and get researched answers</b>
+  <br>
+  <img src="assets/2606_LittleBird_gif_Cardinal_Demo_04.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_04.gif" width="300">
+  <br>
+</p>
+<p align="left">
+  <b>Identify a photo</b>
+  <br>
   <img src="assets/2606_LittleBird_gif_Cardinal_Demo_01.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_01.gif" width="300">
+  <br>
 </p>
-<p align="center">
-  **Nearby iNaturalist sightings from a shared location**
+<p align="left">
+  <b>Nearby iNaturalist sightings from a shared location</b>
+  <br>
   <img src="assets/2606_LittleBird_gif_Cardinal_Demo_02.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_02.gif" width="300">
+  <br>
 </p>
-**Starting and ending a journey**
-<p align="center">
-  **Voice memo → transcription → journey notes**
+<p align="left">
+  <b>Starting and ending a journey</b>
+  <br>
+  <b>Voice memo → transcription → journey notes</b>
   <br>
   <img src="assets/2606_LittleBird_gif_Cardinal_Demo_03.gif" alt="assets/2606_LittleBird_gif_Cardinal_Demo_03.gif" width="300">
+  <br>
 </p>
 
 ## Tests & CI/CD
