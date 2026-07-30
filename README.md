@@ -158,7 +158,7 @@ Screenshots for each capability go in [`assets/`](assets/)
 <br>
 **Nearby iNaturalist sightings from a shared location**
 <br>
-![`assets/2606_LittleBird_gif_Cardinal_Demo_02.gif`](assets/2606_LittleBird_gif_Cardinal_Demo_02.gif)**
+![`assets/2606_LittleBird_gif_Cardinal_Demo_02.gif`](assets/2606_LittleBird_gif_Cardinal_Demo_02.gif)
 <br>
 **Starting and ending a journey**
 <br>
